@@ -292,35 +292,57 @@ class Mappings(object):
         column = util.get_current_column_number()
         line = cache().buffer[row]
 
-        # Detect if the cursor stands on a vimwiki link,
-        # if so, trigger it
-        inside_vimwiki_link = all([
-            '[[' in line,
-            ']]' in line,
-            column >= line.find('[['),
-            column <= line.find(']]') + 1
-        ])
+        # # Detect if the cursor stands on a vimwiki link,
+        # # if so, trigger it
+        # inside_vimwiki_link = all([
+        #     '[[' in line,
+        #     ']]' in line,
+        #     column >= line.find('[['),
+        #     column <= line.find(']]') + 1
+        # ])
 
-        if inside_vimwiki_link:
-            vim.command('VimwikiFollowLink')
-            return
+        # if inside_vimwiki_link:
+        #     vim.command('VimwikiFollowLink')
+        #     return
 
-        # No link detected, check for viewport or a task
-        if cache().vwtask[row] is not None:
-            SelectedTasks().info()
-            return
-        else:
-            port = viewport.ViewPort.from_line(row, cache())
-            if port is not None:
-                Meta().inspect_viewport()
+        # # No link detected, check for viewport or a task
+        # if cache().vwtask[row] is not None:
+        #     SelectedTasks().info()
+        #     return
+        # else:
+        #     port = viewport.ViewPort.from_line(row, cache())
+        #     if port is not None:
+        #         Meta().inspect_viewport()
+        #         return
+
+        #     header = preset.PresetHeader.from_line(row, cache())
+        #     if header is not None:
+        #         Meta().inspect_presetheader()
+        #         return
+
+        # Detect if the cursor stands on a task or a header
+        inside_task= re.match("\s*\*\s\[.\]\s.*", line)
+        inside_task_header = re.match("^#*.+\s\|\|\s.+", line)
+        inside_task_viewport = re.match("^#*.+\s\|\s.+", line)
+
+        if inside_task or inside_task_header or inside_task_viewport:
+            # check for viewport or a task
+            if cache().vwtask[row] is not None:
+                SelectedTasks().info()
                 return
+            else:
+                port = viewport.ViewPort.from_line(row, cache())
+                if port is not None:
+                    Meta().inspect_viewport()
+                    return
 
-            header = preset.PresetHeader.from_line(row, cache())
-            if header is not None:
-                Meta().inspect_presetheader()
-                return
+                header = preset.PresetHeader.from_line(row, cache())
+                if header is not None:
+                    Meta().inspect_presetheader()
+                    return
 
-        # No link detected, not a viewport or a task, so delegate to
+        ## No link detected, not a viewport or a task, so delegate to
+        # Not a viewport or a tas, so delegate to
         # VimwikiFollowLink for link creation
         vim.command('VimwikiFollowLink')
 
